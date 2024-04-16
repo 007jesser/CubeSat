@@ -1,4 +1,4 @@
 CubeSat
 =======
 
-Software for a cube of a sat
+Software for a cube sat
