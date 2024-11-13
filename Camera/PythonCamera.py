@@ -1,45 +1,45 @@
+import time
+from picamera import PiCamera
+from PIL import Image
 
-#import the camera module
-import picamera
-camera = picamera.PiCamera()
-
-true = 1
-false = 0
+# Initialize camera
+camera = PiCamera()
 
 # Defining pixel heights and widths for the image
 height = 100
 width = 100
 
-
-# Take a bitmap photo called image.bmp
-camera.resolution=(width,height)
-camera.start_preview()
+# Capture the image
+camera.resolution = (width, height)
+time.sleep(2)  # Allow camera to adjust before capturing (if needed)
 camera.capture('image.bmp')
-camera.stop_preview()
 
 # Threshold cutoff parameters
-averagePixelThreshold = 200						# The minimum threshold value to triger a true pixel
-thresholdValue = (averagePixelThreshold**2)*3 	# The value to check against to trigger a true pixel
-minimumTruePixels = 40							# The number of true pixels required for a hit
-lightningDetected = false
+average_pixel_threshold = 200  # The minimum threshold value to trigger a true pixel
+threshold_value = (average_pixel_threshold ** 2) * 3  # The value to check against to trigger a true pixel
+minimum_true_pixels = 40  # The number of true pixels required for a hit
+lightning_detected = False
 
-image = open('image.bmp','r');
-imageData = bytearray(image.read())
+# Open and process the image
+with Image.open('image.bmp') as img:
+    img = img.convert('RGB')  # Ensure the image is in RGB format
+    pixels = img.load()
 
-# Discard the first four bytes
-for pixel in range(4):
-	imageData.pop()
+    # Count pixels that meet the threshold criteria
+    threshold_count = 0
+    for x in range(width):
+        for y in range(height):
+            r, g, b = pixels[x, y]
+            pixel_intensity = r**2 + g**2 + b**2
+            if pixel_intensity >= threshold_value:
+                threshold_count += 1
 
-thresholdCount = 0 
-for pixel in range(width*height):
-	thresholdSum = 0;
-	for color in range(3):
-		thresholdSum += imageData.pop()**2
-	if thresholdSum >= thresholdValue:
-		thresholdCount+=1
+    # Check if lightning is detected based on threshold count
+    lightning_detected = threshold_count > minimum_true_pixels
 
-lightningDetected = false
-if thresholdCount > minimumTruePixels:
-	lightningDetected = true
+# Output results
+print("Threshold Count:", threshold_count)
+print("Lightning Detected:", lightning_detected)
 
-print thresholdCount
+# Optionally, you could compress the image before transmission
+# img.save('image_compressed.jpg', 'JPEG', quality=75)
