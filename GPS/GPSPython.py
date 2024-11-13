@@ -1,29 +1,40 @@
 import serial
 
-#Setup UART Serial Port on the Pi.
-GPSSerial = serial.Serial("/dev/ttyAMA0",baudrate=9600,timeout=1)
+# Setup UART Serial Port on the Pi
+GPSSerial = serial.Serial("/dev/ttyAMA0", baudrate=9600, timeout=1)
 
-while 1:
-    #Random string inputted for testing
-    #GPSData = "hfuhewrferi,$GPRMC, ewfwe,ewfe,wefew,wefe,few,ewf,ewf,wef,$GPVTG"
+while True:
+    # Read data from GPS serial port
+    GPSData = GPSSerial.readline().decode('ascii', errors='ignore').strip()  # Decodes byte string to ASCII and removes extra whitespace
 
-    GPSData = GPSSerial.readline() #serial read the GPS
-    #Find the index of the string where RMC data will begin and end 
+    # Find the index where RMC data starts and ends
     startIndex = GPSData.find("$GPRMC,")
     endIndex = GPSData.find("$GPVTG")
 
-    if startIndex != -1:
-        #Create substring from the start index to the end index
-        RMCData = GPSData[startIndex+len("$GPRMC,"):endIndex]
-
+    if startIndex != -1 and endIndex != -1:
+        # Create substring for RMC data
+        RMCData = GPSData[startIndex + len("$GPRMC,"):endIndex]
+        
+        # Split RMC data into components
         DataList = RMCData.split(",")
-        print DataList
+        
+        # Display the parsed data list
+        print(DataList)
 
-    print GPSData
-##    GPSTime = DataList[0]
-##    GPSLatitude = DataList[2]
-##    GPSLongitude = DataList[4]
-##    GPSDate = DataList[8]
+        # Extract GPS information if data format is complete
+        if len(DataList) >= 9:  # Ensure there are enough elements
+            GPSTime = DataList[0]
+            GPSLatitude = DataList[2]
+            GPSLongitude = DataList[4]
+            GPSDate = DataList[8]
 
+            # Display extracted information
+            print("Time:", GPSTime)
+            print("Latitude:", GPSLatitude)
+            print("Longitude:", GPSLongitude)
+            print("Date:", GPSDate)
+    else:
+        print("Incomplete GPS data or missing markers.")
 
-                 
+    # Display raw GPS data for debugging
+    print("Raw GPS Data:", GPSData)
